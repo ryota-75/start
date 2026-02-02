@@ -126,9 +126,24 @@ class GroqGenerator:
             "max_tokens": max_tokens,
             "temperature": 0.7,
         }
-        response = requests.post(self.API_URL, headers=headers, json=data, timeout=30)
-        response.raise_for_status()
-        return response.json()["choices"][0]["message"]["content"].strip()
+        try:
+            response = requests.post(self.API_URL, headers=headers, json=data, timeout=30)
+            response.raise_for_status()
+            result = response.json()
+            return result["choices"][0]["message"]["content"].strip()
+        except requests.exceptions.HTTPError as e:
+            error_msg = f"Groq API HTTP error: {e}"
+            try:
+                error_detail = e.response.json()
+                if "error" in error_detail:
+                    error_msg = f"Groq API: {error_detail['error'].get('message', str(e))}"
+            except Exception:
+                pass
+            raise Exception(error_msg)
+        except requests.exceptions.Timeout:
+            raise Exception("Groq API: Request timeout")
+        except requests.exceptions.RequestException as e:
+            raise Exception(f"Groq API connection error: {e}")
 
     def generate_post(
         self,
@@ -241,9 +256,40 @@ class GeminiGenerator:
             },
         }
         url = f"{self.API_URL}?key={self.api_key}"
-        response = requests.post(url, headers=headers, json=data, timeout=30)
-        response.raise_for_status()
-        return response.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
+        try:
+            response = requests.post(url, headers=headers, json=data, timeout=30)
+            response.raise_for_status()
+            result = response.json()
+
+            # レスポンス構造を確認
+            if "candidates" not in result or not result["candidates"]:
+                # ブロックされた場合やエラーの場合
+                if "error" in result:
+                    raise Exception(f"Gemini API error: {result['error'].get('message', 'Unknown error')}")
+                raise Exception("Gemini API: No candidates in response")
+
+            candidate = result["candidates"][0]
+            if "content" not in candidate:
+                # 安全フィルターでブロックされた場合
+                finish_reason = candidate.get("finishReason", "UNKNOWN")
+                if finish_reason == "SAFETY":
+                    raise Exception("Gemini API: Content blocked by safety filter")
+                raise Exception(f"Gemini API: No content (reason: {finish_reason})")
+
+            return candidate["content"]["parts"][0]["text"].strip()
+        except requests.exceptions.HTTPError as e:
+            error_msg = f"Gemini API HTTP error: {e}"
+            try:
+                error_detail = e.response.json()
+                if "error" in error_detail:
+                    error_msg = f"Gemini API: {error_detail['error'].get('message', str(e))}"
+            except Exception:
+                pass
+            raise Exception(error_msg)
+        except requests.exceptions.Timeout:
+            raise Exception("Gemini API: Request timeout")
+        except requests.exceptions.RequestException as e:
+            raise Exception(f"Gemini API connection error: {e}")
 
     def generate_post(
         self,

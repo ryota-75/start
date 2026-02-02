@@ -485,102 +485,111 @@ async def get_gems_list():
 @app.post("/api/generate")
 async def generate_post(request: GenerateRequest):
     """ポストを生成"""
-    generator = XPostGenerator()
-    researcher = AIBusinessResearcher()
-    categories = researcher.get_post_categories()
+    try:
+        generator = XPostGenerator()
+        researcher = AIBusinessResearcher()
+        categories = researcher.get_post_categories()
 
-    # トピック選択
-    if request.topic:
-        topic = request.topic
-        gems = get_hidden_gems()
-        matching = [g for g in gems if request.topic.lower() in g["topic"].lower()]
-        if matching:
-            context_info = f"{matching[0]['info']}\n💡 {matching[0]['tip']}"
+        # トピック選択
+        if request.topic:
+            topic = request.topic
+            gems = get_hidden_gems()
+            matching = [g for g in gems if request.topic.lower() in g["topic"].lower()]
+            if matching:
+                context_info = f"{matching[0]['info']}\n💡 {matching[0]['tip']}"
+            else:
+                context_info = f"AI×副業における「{request.topic}」に関する実践的な情報"
         else:
-            context_info = f"AI×副業における「{request.topic}」に関する実践的な情報"
-    else:
-        gems = get_hidden_gems()
-        gem = random.choice(gems)
-        topic = gem["topic"]
-        context_info = f"{gem['info']}\n💡 {gem['tip']}"
+            gems = get_hidden_gems()
+            gem = random.choice(gems)
+            topic = gem["topic"]
+            context_info = f"{gem['info']}\n💡 {gem['tip']}"
 
-    # ハッシュタグ
-    hashtags = ["AI副業", "副業", "AI活用"]
-    if request.category and request.category in categories:
-        hashtags = categories[request.category]["hashtags"]
+        # ハッシュタグ
+        hashtags = ["AI副業", "副業", "AI活用"]
+        if request.category and request.category in categories:
+            hashtags = categories[request.category]["hashtags"]
 
-    post = generator.generate_post(
-        topic=topic,
-        context=context_info,
-        style=request.style or "informative",
-        include_hashtags=request.include_hashtags,
-        hashtags=hashtags,
-    )
+        post = generator.generate_post(
+            topic=topic,
+            context=context_info,
+            style=request.style or "informative",
+            include_hashtags=request.include_hashtags,
+            hashtags=hashtags,
+        )
 
-    length_info = calculate_post_length(post)
+        length_info = calculate_post_length(post)
 
-    return {
-        "post": post,
-        "topic": topic,
-        "length": length_info,
-        "backend": generator.get_backend_info(),
-    }
+        return {
+            "post": post,
+            "topic": topic,
+            "length": length_info,
+            "backend": generator.get_backend_info(),
+        }
+    except Exception as e:
+        return {"error": str(e), "backend": generator.get_backend_info() if 'generator' in dir() else None}
 
 
 @app.post("/api/thread")
 async def generate_thread(request: ThreadRequest):
     """スレッドを生成"""
-    generator = XPostGenerator()
+    try:
+        generator = XPostGenerator()
 
-    # トピック選択
-    if request.topic:
-        topic = request.topic
-        context_info = f"AI×副業における「{request.topic}」に関する実践的な情報"
-    else:
-        gems = get_hidden_gems()
-        gem = random.choice(gems)
-        topic = gem["topic"]
-        context_info = f"{gem['info']}\n💡 {gem['tip']}"
+        # トピック選択
+        if request.topic:
+            topic = request.topic
+            context_info = f"AI×副業における「{request.topic}」に関する実践的な情報"
+        else:
+            gems = get_hidden_gems()
+            gem = random.choice(gems)
+            topic = gem["topic"]
+            context_info = f"{gem['info']}\n💡 {gem['tip']}"
 
-    posts = generator.generate_thread(
-        topic=topic,
-        context=context_info,
-        num_posts=request.num_posts,
-        hashtags=["AI副業", "副業"],
-    )
+        posts = generator.generate_thread(
+            topic=topic,
+            context=context_info,
+            num_posts=request.num_posts,
+            hashtags=["AI副業", "副業"],
+        )
 
-    return {
-        "posts": posts,
-        "topic": topic,
-    }
+        return {
+            "posts": posts,
+            "topic": topic,
+        }
+    except Exception as e:
+        return {"error": str(e)}
 
 
 @app.post("/api/variations")
 async def generate_variations(request: VariationsRequest):
     """バリエーションを生成"""
-    generator = XPostGenerator()
+    try:
+        generator = XPostGenerator()
 
-    # トピック選択
-    if request.topic:
-        topic = request.topic
-        context_info = f"AI×副業における「{request.topic}」に関する実践的な情報"
-    else:
-        gems = get_hidden_gems()
-        gem = random.choice(gems)
-        topic = gem["topic"]
-        context_info = f"{gem['info']}\n💡 {gem['tip']}"
+        # トピック選択
+        if request.topic:
+            topic = request.topic
+            context_info = f"AI×副業における「{request.topic}」に関する実践的な情報"
+        else:
+            gems = get_hidden_gems()
+            gem = random.choice(gems)
+            topic = gem["topic"]
+            context_info = f"{gem['info']}\n💡 {gem['tip']}"
 
-    posts = generator.generate_variations(
-        topic=topic,
-        context=context_info,
-        num_variations=request.num_variations,
-        hashtags=["AI副業", "副業"],
-    )
+        posts = generator.generate_variations(
+            topic=topic,
+            context=context_info,
+            num_variations=request.num_variations,
+            hashtags=["AI副業", "副業"],
+        )
 
-    return {
-        "posts": posts,
-        "topic": topic,
-    }
+        return {
+            "posts": posts,
+            "topic": topic,
+        }
+    except Exception as e:
+        return {"error": str(e)}
 
 
 if __name__ == "__main__":
