@@ -239,7 +239,7 @@ class GroqGenerator:
 class GeminiGenerator:
     """Google Gemini APIを使用したポスト生成（無料枠あり）"""
 
-    API_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent"
+    API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
 
     def __init__(self, api_key: Optional[str] = None):
         self.api_key = api_key or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
@@ -534,7 +534,7 @@ class XPostGenerator:
         """使用中のバックエンド情報を取得"""
         info = {
             "groq": {"name": "Groq API", "model": "llama-3.1-8b-instant", "free": True},
-            "gemini": {"name": "Google Gemini API", "model": "gemini-pro", "free": True},
+            "gemini": {"name": "Google Gemini API", "model": "gemini-2.0-flash", "free": True},
             "anthropic": {"name": "Anthropic API", "model": "claude-sonnet-4-20250514", "free": False},
             "template": {"name": "テンプレート", "model": "なし", "free": True},
         }
