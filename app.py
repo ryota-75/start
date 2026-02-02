@@ -444,7 +444,19 @@ async def root():
 @app.get("/api/health")
 async def health():
     """ヘルスチェック"""
-    return {"status": "ok", "app": "AI×副業 Xポスト作成API"}
+    generator = XPostGenerator()
+    return {
+        "status": "ok",
+        "app": "AI×副業 Xポスト作成API",
+        "backend": generator.get_backend_info(),
+    }
+
+
+@app.get("/api/backend")
+async def get_backend():
+    """使用中のバックエンド情報を取得"""
+    generator = XPostGenerator()
+    return generator.get_backend_info()
 
 
 @app.get("/api/topics")
@@ -473,11 +485,7 @@ async def get_gems_list():
 @app.post("/api/generate")
 async def generate_post(request: GenerateRequest):
     """ポストを生成"""
-    try:
-        generator = XPostGenerator()
-    except ValueError as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
+    generator = XPostGenerator()
     researcher = AIBusinessResearcher()
     categories = researcher.get_post_categories()
 
@@ -515,16 +523,14 @@ async def generate_post(request: GenerateRequest):
         "post": post,
         "topic": topic,
         "length": length_info,
+        "backend": generator.get_backend_info(),
     }
 
 
 @app.post("/api/thread")
 async def generate_thread(request: ThreadRequest):
     """スレッドを生成"""
-    try:
-        generator = XPostGenerator()
-    except ValueError as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    generator = XPostGenerator()
 
     # トピック選択
     if request.topic:
@@ -552,10 +558,7 @@ async def generate_thread(request: ThreadRequest):
 @app.post("/api/variations")
 async def generate_variations(request: VariationsRequest):
     """バリエーションを生成"""
-    try:
-        generator = XPostGenerator()
-    except ValueError as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    generator = XPostGenerator()
 
     # トピック選択
     if request.topic:
