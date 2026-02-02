@@ -239,7 +239,7 @@ class GroqGenerator:
 class GeminiGenerator:
     """Google Gemini APIを使用したポスト生成（無料枠あり）"""
 
-    API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent"
+    API_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent"
 
     def __init__(self, api_key: Optional[str] = None):
         self.api_key = api_key or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
